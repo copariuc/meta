@@ -111,7 +111,7 @@ while(rec <= nrow(sursa)) {
 if (is.na(tabel.surse[1,])) tabel.surse <- tabel.surse[-1,]
 rm(rand, sursa, abstract, authors, doi, id, journal,
    keywords, rec, title, type, year, db.nume, dbase)
-# save(tabel.surse, file = "Centralizator.Rdata")
+save(tabel.surse, file = "Centralizator.Rdata"); total.db <- nrow(tabel.surse)
 
 # Scrappingul datelor din alte surse de date ####
 search.string <- 'cyberbullying AND (Facebook OR Twitter OR Youtube OR Instagram OR Pinterest OR SnapChat) AND ("dark triad" OR "triad personality traits" OR "triad traits" OR "triad personality")'
@@ -125,7 +125,6 @@ PRISMA.template <- read.csv(system.file("extdata", "PRISMA.csv", package = "PRIS
 # Incarcarea informatiilor in sablonul PRISMA - TOTALUL SURSELOR
 PRISMA.template <- PRISMA.template %>%
   mutate(boxtext = case_when(data == "identification"~"Identification", T~boxtext))
-total.db <- nrow(tabel.surse)
 PRISMA.template$n[which(PRISMA.template$data == "database_results")] <- total.db
 PRISMA.template$n[which(PRISMA.template$data == "register_results")] <- registers
 
@@ -147,5 +146,5 @@ gasite <- find_duplicates(data = tabel.surse,
                           match_variable = "DOI",
                           match_function = "exact")
 gasite <- extract_unique_references(tabel.surse, gasite)
-duplicate <- sum(gasite$n_duplicates) - nrow(gasite); tabel.surse <- gasite
+duplicate <- sum(gasite$n_duplicates) - nrow(gasite)
 # Scanare suplimentara a duplicatelor si generarea tabelului de analiza
