@@ -148,3 +148,33 @@ gasite <- find_duplicates(data = tabel.surse,
 gasite <- extract_unique_references(tabel.surse, gasite)
 duplicate <- sum(gasite$n_duplicates) - nrow(gasite)
 # Scanare suplimentara a duplicatelor si generarea tabelului de analiza
+rezult <- screen_duplicates(x= gasite)
+duplicate <- duplicate + nrow(gasite) - nrow(rezult)
+PRISMA.template$n[which(PRISMA.template$data == "duplicates")] <- duplicate
+
+# Scanarea inregistrarilor dupa topic ####
+rezult <- screen_topics(x = rezult)
+temp <- rezult$raw %>%
+  dplyr::filter(screened_topics == "selected")
+del.topics <- nrow(rezult$raw) - nrow(temp)
+PRISMA.template$n[which(PRISMA.template$data == "excluded_automatic")] <- del.topics
+
+# Scanarea inregistrarilor dupa tirlu ####
+rezult <- screen_titles(x = temp)
+temp <- rezult %>%
+  dplyr::filter(screened_titles == "selected")
+del.titles <- nrow(rezult) - nrow(temp)
+PRISMA.template$n[which(PRISMA.template$data == "excluded_other")] <- del.titles
+
+# Salvarea datelor - FAZA I
+# Exportul rezultatelor intr-un tabel Excel
+write_xlsx(temp[, 1:11], path = "Centralizator.xlsx")
+# Crearea si salvarea unui tabel
+tabel <- flextable(data = temp[, 1:11]) %>%
+  theme_vanilla(); tabel
+tabel %>% 
+  save_as_html(path = "Centralizator.html") %>%
+  save_as_docx( path = "Centralizator.docx")
+
+save(temp, file = "Temp.RData")
+save(PRISMA.template, file = "PRISMA.Rdata")
