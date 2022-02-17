@@ -39,7 +39,8 @@ ret.sample <- function (ref) {
               male = male,
               female = female,
               prop.m = prop.m, 
-              m.age = m.age))}
+              m.age = m.age))
+  }
 # Functia de conversie a coeficientului de corelatie in marimea efectului
 r2g <- function(ref, r, n, rxx, ryy, vx, vy) {
   es <- hedges_g(d = cohens_d(r = r), totaln = n)
@@ -1076,6 +1077,7 @@ PRISMA <- PRISMA_flowdiagram(PRISMA_data(PRISMA.template),
 PRISMA; PRISMA_save(PRISMA, overwrite = T, filename = "PRISMA.png", filetype = "PNG")
 save(efecte, file = "Efecte.RData"); save(PRISMA.template, file = "PRISMA.Rdata")
 
+
 # Puridicarea si conversia studiilor, salvarea datelor ####
 efecte$es <- as.numeric(efecte$es); efecte$weight <- as.numeric(efecte$weight)
 efecte$sample.size <- as.numeric(efecte$sample.size); efecte$se <- as.numeric(efecte$se)
@@ -1088,7 +1090,7 @@ efecte$X <- factor(efecte$X); efecte$Y <- factor(efecte$Y)
 range(efecte$es)
 ds.global <- efecte %>%
   dplyr::filter(!is.infinite(es)) %>%
-  dplyr::filter(es < 1000)
+  dplyr::filter(es < 100)
 range(ds.global$es); shapiro.test(ds.global$es)
 save(ds.global, file = "Finala.RData")
 
