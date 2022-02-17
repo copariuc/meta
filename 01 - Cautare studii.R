@@ -78,7 +78,7 @@ dfm <- create_dfm(elements = surse$abstract,
 # Extragerea cuvintelor cheie
 get_keywords(retea.asociere)
 
-# Construirea si aranjarea tabelului centralizator ####
+# FAZA I - Construirea si aranjarea tabelului centralizator ####
 tabel.surse <- data.frame(ID = NA, Type = NA, Authors = NA, Year = NA, Title = NA,
                           Journal = NA, Abstract = NA, Keywords = NA, DB = NA, DOI = NA)
 # Importul bibliografiei in R
@@ -166,7 +166,7 @@ temp <- rezult %>%
 del.titles <- nrow(rezult) - nrow(temp)
 PRISMA.template$n[which(PRISMA.template$data == "excluded_other")] <- del.titles
 
-# Salvarea datelor - FAZA I
+# FAZA I - Salvarea datelor
 # Exportul rezultatelor intr-un tabel Excel
 write_xlsx(temp[, 1:11], path = "Centralizator.xlsx")
 # Crearea si salvarea unui tabel
@@ -178,3 +178,89 @@ tabel %>%
 
 save(temp, file = "Temp.RData")
 save(PRISMA.template, file = "PRISMA.Rdata")
+
+# FAZA II - Backward si forward ####
+devtools::install_github("nealhaddaway/citationchaser")
+library(citationchaser)
+load("Temp.RData"); load('PRISMA.Rdata')
+FwBwSearch <- function(rec = 1){
+  forward <- citationchaser::get_refs(temp$doi[rec], type = "doi", get_records = "citations",
+                     token = "Qjx3HPHqMUViiY46v3pBJHYnGXCGSFFlLFP8fT2rWQsUS5i32c1K")
+  backward <- citationchaser::get_refs(temp$doi[rec], type = "doi", get_records = "references",
+                     token = "Qjx3HPHqMUViiY46v3pBJHYnGXCGSFFlLFP8fT2rWQsUS5i32c1K")
+  return(list(fw = forward, bw = backward))
+}
+
+# Crearea tabelului temporar pentru primul articol
+rez <- FwBwSearch(rec = 1); fw <- rez$fw$display; bw <- rez$bw$display
+# Crearea tabelului temporar pentru celelalte articole
+rez <- FwBwSearch(rec = 7); fw <- rbind(fw, rez$fw$display); bw <- rbind(bw, rez$bw$display)
+
+total.fw <- nrow(fw); total.bw <- nrow(bw)
+
+# Cautarea duplicatelor
+fw.gasite <- find_duplicates(data = fw, match_variable = "doi",
+                             match_function = "exact")
+fw.gasite <- extract_unique_references(fw, fw.gasite)
+duplicate.fw <- nrow(fw) - nrow(fw.gasite)
+
+bw.gasite <- find_duplicates(data = bw, match_variable = "doi",
+                             match_function = "exact")
+bw.gasite <- extract_unique_references(bw, bw.gasite)
+duplicate.bw <- nrow(bw) - nrow(bw.gasite)
+
+fw.rezult <- screen_duplicates(x = fw.gasite)
+bw.rezult <- screen_duplicates(x = bw.gasite)
+duplicate.fw <- duplicate.fw + nrow(fw.gasite) - nrow(fw.rezult)
+duplicate.bw <- duplicate.bw + nrow(bw.gasite) - nrow(bw.rezult)
+
+# Cautarea dupa topic - TEMA PT ACASA
+
+# Cautarea dupa titlu - TEMA PT ACASA
+
+# Imbinarea tabelelor
+
+# Cautarea dupa duplicat - TABEL FINAL - TEMA PT ACASA
+
+# Cautarea dupa topic  - TABEL FINAL - TEMA PT ACASA
+
+# Cautarea dupa titlu  - TABEL FINAL - TEMA PT ACASA
+
+# FAZA III - Screeningul dupa abstract ###
+rezult <- screen_abstracts(x = temp)
+efecte <- rezult %>%
+  filter(screened_abstracts == "selected")
+del.abstracts <- nrow(rezult) - nrow(efecte)
+
+
+# Preventie PRISMA sa sincronizam informatiile
+PRISMA.template$n[which(PRISMA.template$data == "database_results")] <- 6874
+PRISMA.template$n[which(PRISMA.template$data == "register_results")] <- 345
+PRISMA.template$n[which(PRISMA.template$data == "duplicates")] <- 2539
+PRISMA.template$n[which(PRISMA.template$data == "excluded_automatic")] <- 4511
+PRISMA.template$n[which(PRISMA.template$data == "excluded_other")] <- 85
+PRISMA.template$n[which(PRISMA.template$data == "records_screened")] <- 84
+PRISMA.template$n[which(PRISMA.template$data == "records_excluded")] <- 46
+PRISMA.template$n[which(PRISMA.template$data == "dbr_sought_reports")] <- 38
+PRISMA.template$n[which(PRISMA.template$data == "dbr_notretrieved_reports")] <- 8
+PRISMA.template$n[which(PRISMA.template$data == "dbr_assessed")] <- 30
+
+# Desenarea si afisarea diagramei PRISMA ####
+PRISMA <- PRISMA_flowdiagram(PRISMA_data(PRISMA.template),
+                             interactive = T, previous = F, other = F,
+                             fontsize = 10, font = "Arial",
+                             title_colour = "DarkOrange",         # Culoarea titului sectiunii - Baze de date
+                             greybox_colour = "DarkOliveGreen",   # Culoarea intregii sectiuni - Alte surse
+                             #main_colour = "Red",                # Culoarea bordurilor - Baze de date
+                             arrow_colour = "SteelBlue",          # Culoarea sagetii
+                             arrow_head = "vee",                  # Tipul varfului sagetii
+                             #arrow_tail = "none",                # Tipul cozii sagetii
+                             side_boxes = T)
+PRISMA; PRISMA_save(PRISMA, overwrite = T, filename = "PRISMA.png", filetype = "PNG")
+
+
+
+
+
+
+

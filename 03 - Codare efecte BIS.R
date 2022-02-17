@@ -17,7 +17,8 @@ ret.sample <- function (ref) {
               male = male,
               female = female,
               prop.m = prop.m, 
-              m.age = m.age))}
+              m.age = m.age))
+  }
 
 # Incarcarea seturilor de date
 load("Centralizator.Rdata"); load("Codari.Rdata"); eliminate <- 0
@@ -40,6 +41,7 @@ var <- c("Total Bullying", "Indirect Bullying", "Direct Bullying", "Verbal Direc
         "Physical Direct Bullying", "Psychopathy", "Narcissism", "Machiavellianism")
 sec <- c("Psychopathy", "Narcissism", "Machiavellianism"); N.x <- 5
 efecte <- Mat2DF(Study = dem$author, Mat.Cor = matrice, Vars = var,  n.X = N.x, s.Y = sec, N = dem$n)$effects
+
 
 ## 2. Studiul ref_006 - CODARE ####
 ## O. Bogolyubova, P. Panicheva, R. Tikhonov, V. Ivanov, Y. Ledovaya (2018) 
